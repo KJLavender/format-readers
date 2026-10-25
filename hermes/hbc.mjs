@@ -120,25 +120,29 @@ try { r = parse(readFileSync(file)); } catch (e) {
   process.exit(1);
 }
 const { header: h } = r;
-if (args.includes("--json")) {
-  console.log(JSON.stringify({ header: h, integrity: r.integrity,
-    functions: r.functions.map(({ index, nameText, paramCount, size, offset, kind, strict, overflowed }) => ({ index, name: nameText, params: paramCount, bytecode_size: size, offset, kind, strict, ...(overflowed ? { large_header: true } : {}) })),
-    strings: r.strings.map(({ index, kind, utf16, text, fileOffset }) => ({ index, kind, encoding: utf16 ? "utf16" : "latin1", text, offset: fileOffset })) }, null, 2));
-  process.exit(0);
-}
-console.log(`Hermes bytecode v${h.version} in ${file}`);
-console.log(`  ${h.fileLength} bytes, integrity ${r.integrity}, source hash ${h.sourceHash}`);
-console.log(`  ${h.functionCount} functions, ${h.stringCount} strings (${h.identifierCount} identifiers, ${h.overflowStringCount} long), ${h.regExpCount} regexps${h.bigIntCount ? `, ${h.bigIntCount} BigInts` : ""}${h.cjsModuleCount ? `, ${h.cjsModuleCount} CommonJS modules` : ""}${h.hasAsync ? ", uses async" : ""}`);
-if (args.includes("--strings")) {
-  for (const s of r.strings) console.log(`  #${String(s.index).padEnd(5)} ${s.kind.padEnd(10)} ${JSON.stringify(s.text)}`);
-  process.exit(0);
-}
-const named = r.functions.filter((f) => f.nameText !== "");
-console.log(`\n  functions: ${named.length} named, ${r.functions.length - named.length} anonymous (bundlers wrap modules in unnamed factories)`);
-for (const f of named.slice(0, 40)) console.log(`    #${String(f.index).padEnd(4)} ${f.nameText.padEnd(24)} ${String(f.paramCount).padStart(2)} params  ${String(f.size).padStart(6)} bytes @0x${f.offset.toString(16)}${f.kind !== "normal" ? `  (${f.kind})` : ""}`);
-if (named.length > 40) console.log(`    ... ${named.length - 40} more named (use --json)`);
-const notable = r.strings.filter((s) => s.kind === "string").flatMap((s) => NOTABLE.filter(([, re]) => re.test(s.text)).map(([tag]) => [tag, s]));
-console.log("\n  notable strings:");
-for (const [tag, s] of notable.slice(0, 50)) console.log(`    ${tag.padEnd(9)} #${String(s.index).padEnd(5)} ${JSON.stringify(s.text)}`);
-const nonAscii = r.strings.filter((s) => s.utf16);
-if (nonAscii.length) console.log(`    utf-16    ${nonAscii.slice(0, 5).map((s) => JSON.stringify(s.text)).join(", ")}${nonAscii.length > 5 ? ", ..." : ""}`);
+// Print without process.exit(): on POSIX, piped stdout is asynchronous and exiting early truncates it.
+const print = () => {
+  if (args.includes("--json")) {
+    console.log(JSON.stringify({ header: h, integrity: r.integrity,
+      functions: r.functions.map(({ index, nameText, paramCount, size, offset, kind, strict, overflowed }) => ({ index, name: nameText, params: paramCount, bytecode_size: size, offset, kind, strict, ...(overflowed ? { large_header: true } : {}) })),
+      strings: r.strings.map(({ index, kind, utf16, text, fileOffset }) => ({ index, kind, encoding: utf16 ? "utf16" : "latin1", text, offset: fileOffset })) }, null, 2));
+    return;
+  }
+  console.log(`Hermes bytecode v${h.version} in ${file}`);
+  console.log(`  ${h.fileLength} bytes, integrity ${r.integrity}, source hash ${h.sourceHash}`);
+  console.log(`  ${h.functionCount} functions, ${h.stringCount} strings (${h.identifierCount} identifiers, ${h.overflowStringCount} long), ${h.regExpCount} regexps${h.bigIntCount ? `, ${h.bigIntCount} BigInts` : ""}${h.cjsModuleCount ? `, ${h.cjsModuleCount} CommonJS modules` : ""}${h.hasAsync ? ", uses async" : ""}`);
+  if (args.includes("--strings")) {
+    for (const s of r.strings) console.log(`  #${String(s.index).padEnd(5)} ${s.kind.padEnd(10)} ${JSON.stringify(s.text)}`);
+    return;
+  }
+  const named = r.functions.filter((f) => f.nameText !== "");
+  console.log(`\n  functions: ${named.length} named, ${r.functions.length - named.length} anonymous (bundlers wrap modules in unnamed factories)`);
+  for (const f of named.slice(0, 40)) console.log(`    #${String(f.index).padEnd(4)} ${f.nameText.padEnd(24)} ${String(f.paramCount).padStart(2)} params  ${String(f.size).padStart(6)} bytes @0x${f.offset.toString(16)}${f.kind !== "normal" ? `  (${f.kind})` : ""}`);
+  if (named.length > 40) console.log(`    ... ${named.length - 40} more named (use --json)`);
+  const notable = r.strings.filter((s) => s.kind === "string").flatMap((s) => NOTABLE.filter(([, re]) => re.test(s.text)).map(([tag]) => [tag, s]));
+  console.log("\n  notable strings:");
+  for (const [tag, s] of notable.slice(0, 50)) console.log(`    ${tag.padEnd(9)} #${String(s.index).padEnd(5)} ${JSON.stringify(s.text)}`);
+  const nonAscii = r.strings.filter((s) => s.utf16);
+  if (nonAscii.length) console.log(`    utf-16    ${nonAscii.slice(0, 5).map((s) => JSON.stringify(s.text)).join(", ")}${nonAscii.length > 5 ? ", ..." : ""}`);
+};
+print();
