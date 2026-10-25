@@ -1,0 +1,23 @@
+{
+  "name": "format-readers",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Small read-only readers for protobuf/gRPC, PyInstaller executables and Hermes bytecode, each checked against a reference tool.",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "npm run test:protobuf && npm run test:pyinstaller && npm run test:hermes",
+    "test:protobuf": "node protobuf/test/protoc-oracle.mjs && node protobuf/test/grpc-test.mjs",
+    "test:pyinstaller": "node pyinstaller/test/run.mjs",
+    "test:hermes": "node hermes/test/run.mjs"
+  },
+  "devDependencies": {
+    "@protobuf-ts/protoc": "^2.11.1",
+    "hermesc-0.11": "npm:hermes-engine@0.11.0",
+    "hermesc-0.8": "npm:hermes-engine@0.8.0",
+    "hermesc-1.0-a": "npm:hermes-compiler@250829098.0.17",
+    "hermesc-1.0-b": "npm:hermes-compiler@260318099.0.4",
+    "protobufjs": "^8.8.1"
+  }
+}

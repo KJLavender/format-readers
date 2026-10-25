@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install reference tools
+        run: |
+          python -m pip install --quiet pyinstaller hermes-dec
+          curl -fsSL https://raw.githubusercontent.com/extremecoders-re/pyinstxtractor/master/pyinstxtractor.py -o pyinstaller/test/pyinstxtractor.py
+
+      - run: npm ci
+
+      - name: Make Hermes compilers executable
+        run: find node_modules/hermesc-* -path '*linux64-bin/hermesc' -exec chmod +x {} +
+
+      - name: protobuf vs protoc
+        run: npm run test:protobuf
+
+      - name: PyInstaller vs pyinstxtractor
+        run: npm run test:pyinstaller
+        env:
+          PYTHON: python
+
+      - name: Hermes vs hermes-dec
+        run: npm run test:hermes
+        env:
+          PYTHON: python
