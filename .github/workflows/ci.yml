@@ -30,8 +30,13 @@ jobs:
 
       - run: npm ci
 
+      - name: Fetch hermesc v96 from react-native 0.76
+        run: |
+          mkdir -p .cache/rn
+          curl -fsSL "$(npm view react-native@0.76.9 dist.tarball)" | tar -xz -C .cache/rn package/sdks/hermesc/linux64-bin
+
       - name: Make Hermes compilers executable
-        run: find node_modules/hermesc-* -path '*linux64-bin/hermesc' -exec chmod +x {} +
+        run: find node_modules/hermesc-* .cache/rn -path '*linux64-bin/hermesc' -exec chmod +x {} +
 
       - name: protobuf vs protoc
         run: npm run test:protobuf
@@ -45,3 +50,4 @@ jobs:
         run: npm run test:hermes
         env:
           PYTHON: python
+          HERMESC_RN_DIR: .cache/rn/package

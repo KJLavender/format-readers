@@ -1,4 +1,5 @@
-// Compile the samples with four official Hermes compilers (bytecode v83, v84, v98, v99) and compare
+// Compile the samples with four official Hermes compilers (bytecode v83, v84, v98, v99, plus v96 when
+// HERMESC_RN_DIR is set) and compare
 // hbc.mjs field by field with hermes-dec. Also builds a stress file that forces overflowed function
 // headers, and checks that a lone U+FEFF string survives (hermes-dec drops it, see README).
 //
@@ -22,6 +23,14 @@ const compilers = [
   ["hermesc-1.0-a", "hermesc", 98],
   ["hermesc-1.0-b", "hermesc", 99],
 ].map(([pkg, sub, version]) => [join(dirname(require.resolve(`${pkg}/package.json`)), sub, platformDir, binary), version]);
+// v96 (React Native 0.74-0.76) only ships inside the react-native package, which is too heavy to
+// install as a dependency. Point HERMESC_RN_DIR at an unpacked react-native package to include it.
+if (process.env.HERMESC_RN_DIR) {
+  const rnHermesc = join(process.env.HERMESC_RN_DIR, "sdks", "hermesc", platformDir, binary);
+  const version = Number(/HBC bytecode version: (\d+)/.exec(execFileSync(rnHermesc, ["-version"]).toString())?.[1]);
+  compilers.push([rnHermesc, version]);
+  compilers.sort((a, b) => a[1] - b[1]);
+}
 
 const work = mkdtempSync(join(tmpdir(), "hbc-"));
 const readHbc = (file) => JSON.parse(execFileSync(process.execPath, [join(here, "..", "hbc.mjs"), file, "--json"], { maxBuffer: 1 << 30 }).toString("utf8"));

@@ -87,7 +87,7 @@ No disassembly or decompilation; hermes-dec and hbctool do that.
 | protobuf | 300 generated messages, 500 with random bytes changed, 300 random byte strings vs `protoc --decode_raw` | byte-for-byte identical output, including the valid/invalid verdict |
 | protobuf | gRPC-web, grpc-web-text, gzip frame and raw `x-protobuf` bodies in a HAR | all decoded, trailers included |
 | pyinstaller | Sample app built with PyInstaller (onefile and onedir), Python 3.11 and 3.13 | every extracted file byte-identical to pyinstxtractor; the extracted `app.pyc` prints the same output as the executable |
-| hermes | Same program compiled by hermesc 0.8.0, 0.11.0 and two 1.0.0 builds (bytecode v83, v84, v98, v99) | header, strings and functions identical to hermes-dec |
+| hermes | Same program compiled by hermesc 0.8.0, 0.11.0, the one bundled with React Native 0.76, and two 1.0.0 builds (bytecode v83, v84, v96, v98, v99) | header, strings and functions identical to hermes-dec |
 | hermes | Stress file: 802 functions, 3,204 strings, one 197 KB function | identical, overflowed headers exercised on every version |
 
 Run them yourself (the PyInstaller and Hermes tests need a Python with `pyinstaller` / `hermes-dec`):
@@ -98,6 +98,8 @@ npm run test:protobuf
 PYTHON=python3 npm run test:pyinstaller
 PYTHON=python3 npm run test:hermes
 ```
+
+The v96 compiler only ships inside the `react-native` package. To include it, unpack `react-native@0.76.x` and set `HERMESC_RN_DIR` to its `package/` folder (CI does this).
 
 Outside the automated tests, the readers were also run on files from real installed software: 93 protobuf files from a Chrome profile (identical to protoc), a signed Python 3.14 PyInstaller app (all 151 modules unpacked, which pyinstxtractor skips without Python 3.14), and the BlueWallet 8.0.2 Android bundle (40,594 functions and 109,320 strings, read in 0.16 s).
 

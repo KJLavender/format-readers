@@ -87,7 +87,7 @@ node hermes/hbc.mjs index.android.bundle --strings   # 每個字串和它的類�
 | protobuf | 300 則產生的訊息、500 則隨機改壞的訊息、300 組隨機亂碼，跟 `protoc --decode_raw` 比對 | 輸出逐字相同，連「合不合法」的判斷都一樣 |
 | protobuf | HAR 裡的 gRPC-web、grpc-web-text、gzip 壓縮框和一般 `x-protobuf` | 全部解出來，包括 trailer |
 | pyinstaller | 用 PyInstaller 打包的範例程式（onefile 和 onedir），Python 3.11 和 3.13 | 取出的每個檔案都跟 pyinstxtractor 逐 byte 相同；還原的 `app.pyc` 輸出跟原執行檔一樣 |
-| hermes | 同一份程式用 hermesc 0.8.0、0.11.0 和兩個 1.0.0 版編譯（bytecode v83、v84、v98、v99） | 檔頭、字串、函式全部跟 hermes-dec 一致 |
+| hermes | 同一份程式用 hermesc 0.8.0、0.11.0、React Native 0.76 內附的版本和兩個 1.0.0 版編譯（bytecode v83、v84、v96、v98、v99） | 檔頭、字串、函式全部跟 hermes-dec 一致 |
 | hermes | 壓力測試：802 個函式、3,204 個字串、一個 197 KB 的函式 | 一致，每個版本都測到溢位格式 |
 
 自己跑測試（PyInstaller 和 Hermes 的測試需要裝有 `pyinstaller`／`hermes-dec` 的 Python）：
@@ -98,6 +98,8 @@ npm run test:protobuf
 PYTHON=python3 npm run test:pyinstaller
 PYTHON=python3 npm run test:hermes
 ```
+
+v96 的編譯器只附在 `react-native` 套件裡。要一起測的話，解開 `react-native@0.76.x`，把 `HERMESC_RN_DIR` 設成它的 `package/` 資料夾（CI 就是這樣做）。
 
 自動測試以外，也拿真實安裝的軟體試過：Chrome 設定檔裡的 93 個 protobuf 檔（跟 protoc 一致）、一個有數位簽章的 Python 3.14 PyInstaller 程式（151 個模組全部解開；沒裝 Python 3.14 時 pyinstxtractor 會跳過），以及 BlueWallet 8.0.2 的 Android bundle（40,594 個函式、109,320 個字串，0.16 秒讀完）。
 
